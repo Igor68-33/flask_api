@@ -8,10 +8,10 @@ from app.models import User
 
 api = Blueprint('api', __name__)
 
+
 @api.route('/api/', methods=['GET'])
 def welcome():
     return jsonify({'message': 'Welcome in board'})
-
 
 
 # ADS
@@ -209,7 +209,7 @@ def register():
                 first_name=first_name, last_name=last_name, phone=phone)
     db.session.add(user)
     db.session.commit()
-    return jsonify({'id': f"{user.id}"}), 201
+    return jsonify({"message": "User registered successfully", "user_id": f"{user.id}"}), 200
 
 
 # 8	Авторизация открыт POST		http://127.0.0.1:8000/api/token/login/
