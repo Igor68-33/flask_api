@@ -1,5 +1,4 @@
 from sqlalchemy.orm import relationship
-from werkzeug.security import generate_password_hash, check_password_hash
 
 from .extensions import db
 
@@ -17,12 +16,6 @@ class User(db.Model):
 
     def __repr__(self):
         return f'<User  {self.username}>'
-
-    # def set_password(self, password):
-    #     self.password = generate_password_hash(password)
-    #
-    # def check_password(self, password):
-    #     return check_password_hash(self.password, password)
 
     def to_dict(self):
         return {
@@ -59,5 +52,5 @@ class Ad(db.Model):
             'price': self.price,
             'created_at': self.created_at,
             'updated_at': self.updated_at,
-            'user_id':  self.user_id
+            'user_id': self.user_id
         }

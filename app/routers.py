@@ -10,15 +10,15 @@ api = Blueprint('api', __name__)
 
 
 # ADS
-# 1	Объявления все открытый GET	http://127.0.0.1:8000/api/advs/
-@api.route('/api/advs/', methods=['GET'])
+# 1	Объявления все открытый GET	http://127.0.0.1:8000/api/ads/
+@api.route('/api/ads/', methods=['GET'])
 def get_ads():
     ads = Ad.query.all()
     return jsonify([ad.to_dict() for ad in ads])
 
 
-# 2	Объявление id открытый GET	http://127.0.0.1:8000/api/adv/<ad_id>
-@api.route('/api/adv/<int:ad_id>', methods=['GET'])
+# 2	Объявление id открытый GET	http://127.0.0.1:8000/api/ad/<ad_id>
+@api.route('/api/ad/<int:ad_id>', methods=['GET'])
 def get_ad(ad_id):
     ad = Ad.query.get(ad_id)
     if ad:
@@ -26,8 +26,8 @@ def get_ad(ad_id):
     return jsonify({'message': 'Ad not found'}), 404
 
 
-# 3	Создать свое закрыт POST	http://127.0.0.1:8000/api/adv/
-@api.route('/api/adv/', methods=['POST'])
+# 3	Создать свое закрыт POST	http://127.0.0.1:8000/api/ad/
+@api.route('/api/ad/create/', methods=['POST'])
 @jwt_required()  # Если требуется авторизация
 def add_ad():
     cur_user_id = get_jwt_identity()
@@ -51,11 +51,11 @@ def add_ad():
     db.session.add(ad)
     db.session.commit()
 
-    return jsonify({"message": "Advertisement added successfully!", "ad": ad.to_dict()}), 201
+    return jsonify(ad.to_dict()), 201
 
 
-# 4	Изменить свое закрыт PUT	http://127.0.0.1:8000/api/adv/<ad_id>
-@api.route('/api/adv/<int:ad_id>', methods=['PUT'])
+# 4	Изменить свое закрыт PUT	http://127.0.0.1:8000/api/ad/<ad_id>
+@api.route('/api/ad/<int:ad_id>/update/', methods=['PUT'])
 @jwt_required()
 def update_ad(ad_id):
     cur_user_id = get_jwt_identity()
@@ -83,8 +83,8 @@ def update_ad(ad_id):
     return jsonify(ad.to_dict()), 200
 
 
-# 5	Удалить свое закрыт DEL	http://127.0.0.1:8000/api/adv/<ad_id>
-@api.route('/api/adv/<int:ad_id>', methods=['DELETE'])
+# 5	Удалить свое закрыт DEL	http://127.0.0.1:8000/api/ad/<ad_id>
+@api.route('/api/ad/<int:ad_id>/delete/', methods=['DELETE'])
 @jwt_required()
 def delete_ad(ad_id):
     cur_user_id = get_jwt_identity()
@@ -100,7 +100,7 @@ def delete_ad(ad_id):
 
     db.session.delete(ad)
     db.session.commit()
-    return jsonify({'message': 'Ad deleted'})
+    return jsonify({'message': 'Ad deleted'}), 204
 
 
 # USERS
@@ -112,8 +112,8 @@ def get_users():
     return jsonify([user.to_dict() for user in users])
 
 
-# 2	Объявления пользователя id открыт GET	http://127.0.0.1:8000/api/user/<user_id>/advs/
-@api.route('/api/user/<int:user_id>/advs', methods=['GET'])
+# 2	Объявления пользователя id открыт GET	http://127.0.0.1:8000/api/user/<user_id>/ads/
+@api.route('/api/user/<int:user_id>/ads/', methods=['GET'])
 def get_ads_user_id(user_id):
     ads = Ad.query.filter_by(user_id=user_id).all()
     return jsonify([ad.to_dict() for ad in ads])
@@ -140,16 +140,25 @@ def get_user(user_id):
     return jsonify({'message': 'User  not found'}), 404
 
 
-# 5	Изменить свою закрыт PUT	http://127.0.0.1:8000/api/user/
-@api.route('/api/user/', methods=['PUT'])
+# 5	Изменить свою закрыт PUT	http://127.0.0.1:8000/api/user/update/
+@api.route('/api/user/update/', methods=['PUT'])
 @jwt_required()
 def update_user():
     cur_user_id = get_jwt_identity()
     user = User.query.get(cur_user_id)
+
     if not user:
-        return jsonify({'message': 'User not found'}), 404
+        return jsonify({'message': 'User  not found'}), 404
 
     data = request.get_json()
+
+    existing_user = User.query.filter(
+        (User.username == data.get('username')) | (User.email == data.get('email'))
+    ).first()
+
+    if existing_user and existing_user.id != cur_user_id:
+        return jsonify({"message": "User  already exists"}), 400
+
     for key, value in data.items():
         if hasattr(user, key):
             setattr(user, key, value)
@@ -157,11 +166,11 @@ def update_user():
                 user.password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
 
     db.session.commit()
-    return jsonify(user.to_dict())
+    return jsonify(user.to_dict()), 200
 
 
-# 6	Удалить свою закрыт DEL		http://127.0.0.1:8000/api/user/
-@api.route('/api/user/', methods=['DELETE'])
+# 6	Удалить свою закрыт DEL		http://127.0.0.1:8000/api/user/delete/
+@api.route('/api/user/delete/', methods=['DELETE'])
 @jwt_required()
 def delete_user():
     cur_user_id = get_jwt_identity()
@@ -171,7 +180,7 @@ def delete_user():
 
     db.session.delete(user)
     db.session.commit()
-    return jsonify({'message': 'User deleted successfully.'})
+    return jsonify({'message': 'User deleted successfully.'}), 204
 
 
 # 7	Регистрация открыт POST		http://127.0.0.1:8000/api/user/register/
