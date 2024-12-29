@@ -8,6 +8,11 @@ from app.models import User
 
 api = Blueprint('api', __name__)
 
+@api.route('/api/', methods=['GET'])
+def welcome():
+    return jsonify({'message': 'Welcome in board'})
+
+
 
 # ADS
 # 1	Объявления все открытый GET	http://127.0.0.1:8000/api/ads/
