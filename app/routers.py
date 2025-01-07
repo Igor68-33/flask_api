@@ -209,7 +209,7 @@ def register():
                 first_name=first_name, last_name=last_name, phone=phone)
     db.session.add(user)
     db.session.commit()
-    return jsonify({"message": "User registered successfully", "user_id": f"{user.id}"}), 200
+    return jsonify({"message": "User registered successfully", "user_id": f"{user.id}"}), 201
 
 
 # 8	Авторизация открыт POST		http://127.0.0.1:8000/api/token/login/
